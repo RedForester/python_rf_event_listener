@@ -24,6 +24,12 @@ setup(
         'pydantic ~= 1.5',
         'rf-api-client >= 0.0'
     ],
+    extras_require={
+        'dev': [
+            'pytest ~= 5.4',
+            'pytest-asyncio ~= 0.12',
+        ],
+    },
     include_package_data=True,
     zip_safe=False
 )
