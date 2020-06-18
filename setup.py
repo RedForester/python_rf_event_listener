@@ -22,7 +22,9 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'pydantic ~= 1.5',
-        'rf-api-client >= 0.0'
+        'rf-api-client >= 0.0',
+        'yarl ~= 1.4',
+        'aiohttp ~= 3.6',
     ],
     extras_require={
         'dev': [
