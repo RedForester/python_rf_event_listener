@@ -12,6 +12,11 @@ class BaseEventModel(BaseModel):
         allow_mutation = False
 
 
+class MapEventUser(BaseEventModel):
+    id: str
+    username: str
+
+
 class MapEventDto(BaseEventModel):
     id: str
     name: str
@@ -211,6 +216,7 @@ class EventVisitor(Generic[T]):
 class BaseMapEvent(BaseEventModel):
     type: EventType
     what: str
+    who: MapEventUser
     session_id: Optional[str] = Field(alias='sessionId', default=None)
 
 
@@ -428,11 +434,10 @@ def any_event_to_typed(event: AnyMapEvent) -> TypedMapEvent:
     return typed_event(**event.dict())
 
 
-def parse_compound_event(json: dict) -> List[TypedMapEvent]:
-    compound_event = CompoundMapEvent(**json)
-    additional = compound_event.additional or []
+def parse_compound_event(event: CompoundMapEvent) -> List[TypedMapEvent]:
+    additional = event.additional or []
 
     return [
-        any_event_to_typed(compound_event),
+        any_event_to_typed(event),
         *(any_event_to_typed(e) for e in additional),
     ]

@@ -1,6 +1,6 @@
 import pytest
 
-from rf_event_listener.events import NodeUpdatedMapEvent, EventType, EventVisitor, NodeDeletedMapEvent
+from rf_event_listener.events import NodeUpdatedMapEvent, EventType, EventVisitor, NodeDeletedMapEvent, MapEventUser
 
 
 class MockVisitor(EventVisitor[str]):
@@ -13,6 +13,10 @@ class MockVisitor(EventVisitor[str]):
 async def test_visitor_accepts_events():
     event = NodeUpdatedMapEvent(
         type=EventType.node_updated,
+        who=MapEventUser(
+            id='user-id',
+            username='username',
+        ),
         what='node-id'
     )
     visitor = MockVisitor('default')
@@ -24,6 +28,10 @@ async def test_visitor_accepts_events():
 async def test_visitor_uses_default_result():
     event = NodeDeletedMapEvent(
         type=EventType.node_deleted,
+        who=MapEventUser(
+            id='user-id',
+            username='username',
+        ),
         what='node-id'
     )
     visitor = MockVisitor('default')
