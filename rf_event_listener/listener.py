@@ -1,8 +1,8 @@
 import asyncio
 import logging
-from asyncio import Task, create_task, CancelledError, Future
+from asyncio import Task, create_task, CancelledError
 from datetime import datetime
-from typing import Dict, Optional, Callable
+from typing import Dict, Optional, Callable, Coroutine, Any
 
 from rf_event_listener.api import EventsApi, KvEntry
 from rf_event_listener.events import parse_compound_event, TypedMapEvent
@@ -10,7 +10,7 @@ from rf_event_listener.events import parse_compound_event, TypedMapEvent
 logger = logging.getLogger('rf_maps_listener')
 
 
-MapListenerCallback = Callable[[datetime, TypedMapEvent], Future]
+MapListenerCallback = Callable[[datetime, TypedMapEvent], Coroutine[Any, Any, None]]
 
 
 class MapsListener:
@@ -42,7 +42,7 @@ class MapListener:
             events_per_request: int,
             map_id: str,
             kv_prefix: str,
-            offset: str
+            offset: Optional[str]
     ):
         self._api = api
         self._listener = listener
@@ -70,6 +70,7 @@ class MapListener:
         logger.info(f"[{self._map_id}] Initial kv offset = {self._offset}")
 
         notify_last = await self._api.get_map_notify_last(self._map_id, self._kv_prefix)
+        self._offset = self._offset or notify_last.value
         logger.info(f"[{self._map_id}] Initial notify last version = {notify_last.version}")
 
         while True:
