@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from asyncio import Task, create_task, CancelledError
+from asyncio import Task, CancelledError, AbstractEventLoop
 from datetime import datetime
 from typing import Dict, Optional, Callable, Coroutine, Any
 
@@ -14,16 +14,22 @@ MapListenerCallback = Callable[[datetime, TypedMapEvent], Coroutine[Any, Any, No
 
 
 class MapsListener:
-    def __init__(self, api: EventsApi, events_per_request: int = 100):
+    def __init__(
+            self,
+            api: EventsApi,
+            events_per_request: int = 100,
+            loop: Optional[AbstractEventLoop] = None,
+    ):
         self._api = api
         self._listeners: Dict[str, Task] = {}
         self._events_per_request = events_per_request
+        self._loop = loop or asyncio.get_event_loop()
 
     def add_map(self, map_id: str, kv_prefix: str, listener: MapListenerCallback, initial_offset: Optional[str] = None):
         if map_id in self._listeners:
             return
         listener = MapListener(self._api, listener, self._events_per_request, map_id, kv_prefix, initial_offset)
-        task = create_task(listener.listen())
+        task = self._loop.create_task(listener.listen())
         self._listeners[map_id] = task
 
     def remove_map(self, map_id: str):
