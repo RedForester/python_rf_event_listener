@@ -391,7 +391,7 @@ class NodeSubscriptionDeniedMapEvent(TypedMapEvent):
 
 
 class CompoundMapEvent(AnyMapEvent):
-    additional: Optional[List[AnyMapEvent]] = None
+    additional: Optional[List[dict]] = None
 
 
 event_type_to_typed_event = {
@@ -432,12 +432,3 @@ event_type_to_typed_event = {
 def any_event_to_typed(event: AnyMapEvent) -> TypedMapEvent:
     typed_event = event_type_to_typed_event[event.type]
     return typed_event(**event.dict())
-
-
-def parse_compound_event(event: CompoundMapEvent) -> List[TypedMapEvent]:
-    additional = event.additional or []
-
-    return [
-        any_event_to_typed(event),
-        *(any_event_to_typed(e) for e in additional),
-    ]

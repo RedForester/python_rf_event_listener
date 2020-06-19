@@ -5,8 +5,9 @@ from typing import Optional, List, Tuple
 import pytest
 
 from rf_event_listener.api import EventsApi, KvNotifyLast, KvEntry
-from rf_event_listener.events import TypedMapEvent, CompoundMapEvent, EventType, MapEventUser, NodeUpdatedMapEvent
-from rf_event_listener.listener import MapsListener
+from rf_event_listener.events import TypedMapEvent, CompoundMapEvent, EventType, MapEventUser, NodeUpdatedMapEvent, \
+    NodeDeletedMapEvent, any_event_to_typed
+from rf_event_listener.listener import MapsListener, process_event
 
 
 class MockEventsApi(EventsApi):
@@ -76,7 +77,7 @@ async def test_initially_empty_event_queue():
         session_id=None
     )
     api.push_event(
-        KvEntry(key=['0'], value=CompoundMapEvent(**expected_event.dict()))
+        KvEntry(key=['0'], value=expected_event.dict())
     )
 
     result = await wait_for(completed, 10)
@@ -99,7 +100,7 @@ async def test_filled_event_queue():
         ),
         what='node-id',
         session_id=None
-    )
+    ).dict()
 
     api = MockEventsApi(
         events=[
@@ -125,7 +126,7 @@ async def test_filled_event_queue():
         session_id=None
     )
     api.push_event(
-        KvEntry(key=['3'], value=CompoundMapEvent(**expected_event.dict()))
+        KvEntry(key=['3'], value=expected_event.dict())
     )
 
     result = await wait_for(completed, 10)
@@ -148,7 +149,7 @@ async def test_filled_event_queue_with_offset():
         ),
         what='node-id',
         session_id=None
-    )
+    ).dict()
 
     api = MockEventsApi(
         events=[
@@ -163,12 +164,96 @@ async def test_filled_event_queue_with_offset():
     listener.add_map('map-id', 'map-prefix', consumer, '1')
 
     api.push_event(
-        KvEntry(key=['2'], value=CompoundMapEvent(**old_event.dict()))
+        KvEntry(key=['2'], value=old_event)
     )
 
     result = await wait_for(completed, 10)
-    assert result == (datetime.utcfromtimestamp(0.002), NodeUpdatedMapEvent(**old_event.dict()))
+    assert result == (datetime.utcfromtimestamp(0.002), NodeUpdatedMapEvent(**old_event))
     listener.remove_map('map-id')
+
+
+@pytest.mark.asyncio
+async def test_skip_unknown_event():
+    processed_events = []
+
+    async def consumer(_: datetime, actual_event: TypedMapEvent):
+        processed_events.append(actual_event)
+
+    event = KvEntry(
+        key=['0'],
+        value={
+            'type': 'unknown_event',
+        },
+    )
+
+    await process_event(
+        map_id='map',
+        listener=consumer,
+        event=event,
+        skip_unknown_events=True
+    )
+
+    assert processed_events == []
+
+
+@pytest.mark.asyncio
+async def test_skip_unknown_event_inside_compound():
+    processed_events = []
+
+    async def consumer(_: datetime, actual_event: TypedMapEvent):
+        processed_events.append(actual_event)
+
+    who = MapEventUser(
+        id='user',
+        username='user@test',
+    )
+
+    first_event = NodeUpdatedMapEvent(
+        type=EventType.node_updated,
+        what='first',
+        who=who,
+    )
+
+    unknown_event = {
+        'type': 'unknown_event',
+    }
+
+    second_event = NodeDeletedMapEvent(
+        type=EventType.node_deleted,
+        what='second',
+        who=who,
+    )
+
+    wrapper_event = CompoundMapEvent(
+        type=EventType.node_created,
+        what='root',
+        who=who,
+        additional=[
+            first_event.dict(),
+            unknown_event,
+            second_event.dict(),
+        ],
+    )
+
+    event = KvEntry(
+        key=['0'],
+        value=wrapper_event.dict(),
+    )
+
+    await process_event(
+        map_id='map',
+        listener=consumer,
+        event=event,
+        skip_unknown_events=True
+    )
+
+    expected_events = [
+        any_event_to_typed(wrapper_event),
+        first_event,
+        second_event,
+    ]
+
+    assert expected_events == processed_events
 
 
 # todo tests

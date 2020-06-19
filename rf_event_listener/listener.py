@@ -2,10 +2,12 @@ import asyncio
 import logging
 from asyncio import Task, CancelledError, AbstractEventLoop
 from datetime import datetime
-from typing import Dict, Optional, Callable, Coroutine, Any
+from typing import Dict, Optional, Callable, Coroutine, Any, List
+
+from pydantic import ValidationError
 
 from rf_event_listener.api import EventsApi, KvEntry
-from rf_event_listener.events import parse_compound_event, TypedMapEvent
+from rf_event_listener.events import TypedMapEvent, CompoundMapEvent, any_event_to_typed, AnyMapEvent
 
 logger = logging.getLogger('rf_maps_listener')
 
@@ -19,16 +21,20 @@ class MapsListener:
             api: EventsApi,
             events_per_request: int = 100,
             loop: Optional[AbstractEventLoop] = None,
+            skip_unknown_events: bool = False,
     ):
         self._api = api
         self._listeners: Dict[str, Task] = {}
         self._events_per_request = events_per_request
         self._loop = loop or asyncio.get_event_loop()
+        self._skip_unknown_events = skip_unknown_events
 
     def add_map(self, map_id: str, kv_prefix: str, listener: MapListenerCallback, initial_offset: Optional[str] = None):
         if map_id in self._listeners:
             return
-        listener = MapListener(self._api, listener, self._events_per_request, map_id, kv_prefix, initial_offset)
+        listener = MapListener(
+            self._api, listener, self._events_per_request, map_id, kv_prefix, initial_offset, self._skip_unknown_events
+        )
         task = self._loop.create_task(listener.listen())
         self._listeners[map_id] = task
 
@@ -48,7 +54,8 @@ class MapListener:
             events_per_request: int,
             map_id: str,
             kv_prefix: str,
-            offset: Optional[str]
+            offset: Optional[str],
+            skip_unknown_events: bool,
     ):
         self._api = api
         self._listener = listener
@@ -56,6 +63,7 @@ class MapListener:
         self._map_id = map_id
         self._kv_prefix = kv_prefix
         self._offset = offset
+        self._skip_unknown_events = skip_unknown_events
 
     async def listen(self):
         logger.info(f'[{self._map_id}] Map listener started')
@@ -86,7 +94,7 @@ class MapListener:
             if len(events) != 0:
                 logger.info(f"[{self._map_id}] Read {len(events)} events")
             for event in events:
-                await self._process_event(event)
+                await process_event(self._map_id, self._listener, event, self._skip_unknown_events)
                 self._offset = event.key[-1]
                 logger.info(f"[{self._map_id}] New KV offset = {self._offset}")
             if len(events) < self._events_per_request:
@@ -99,14 +107,48 @@ class MapListener:
                     logger.info(f"[{self._map_id}] New notify last version = {new_notify_last.version}")
                     notify_last = new_notify_last
 
-    async def _process_event(self, event: KvEntry):
+
+async def process_event(
+        map_id: str,
+        listener: MapListenerCallback,
+        event: KvEntry,
+        skip_unknown_events: bool,
+):
+    logger.debug(f"[{map_id}] Processing event {event}")
+
+    try:
+        timestamp = datetime.utcfromtimestamp(int(event.key[-1]) / 1000)
+        events = parse_compound_event(map_id, event.value, skip_unknown_events)
+    except (ValidationError, ValueError, IndexError):
+        if skip_unknown_events:
+            logger.exception(f"[{map_id}] Error in event parsing, event = {event}")
+            return
+        raise
+
+    try:
+        for event in events:
+            await listener(timestamp, event)
+    except CancelledError:
+        raise
+    except Exception:
+        logger.exception(f"[{map_id}] Error in event processing")
+
+
+def parse_compound_event(map_id: str, json: dict, skip_unknown_events=False) -> List[TypedMapEvent]:
+    event = CompoundMapEvent(**json)
+    additional = event.additional or []
+
+    result = [any_event_to_typed(event)]
+
+    for e in additional:
+        json = dict(**e)
+        json['who'] = event.who
         try:
-            logger.debug(f"[{self._map_id}] Processing event {event}")
-            timestamp = datetime.utcfromtimestamp(int(event.key[-1]) / 1000)
-            events = parse_compound_event(event.value)
-            for event in events:
-                await self._listener(timestamp, event)
-        except CancelledError:
-            raise
-        except Exception:
-            logger.exception(f"[{self._map_id}] Error in event processing")
+            parsed = AnyMapEvent(**json)
+            result.append(any_event_to_typed(parsed))
+        except ValidationError:
+            if not skip_unknown_events:
+                raise
+            logger.exception(f"[{map_id}] Error in event parsing, event = {event}")
+
+    return result

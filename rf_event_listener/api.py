@@ -5,7 +5,7 @@ import aiohttp
 from aiohttp import ClientSession
 from yarl import URL
 
-from rf_event_listener.events import BaseEventModel, CompoundMapEvent
+from rf_event_listener.events import BaseEventModel
 
 
 class KvNotifyLast(BaseEventModel):
@@ -15,7 +15,7 @@ class KvNotifyLast(BaseEventModel):
 
 class KvEntry(BaseEventModel):
     key: List[str]
-    value: CompoundMapEvent
+    value: dict
 
 
 class EventsApi:

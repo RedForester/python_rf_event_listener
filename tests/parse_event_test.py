@@ -2,8 +2,9 @@ import pytest
 from pydantic import ValidationError
 
 from rf_event_listener.events import AnyMapEvent, EventType, NodeUpdatedMapEvent, any_event_to_typed, \
-    SearchQuerySavedMapEvent, SearchQuerySavedData, NodeCreatedMapEvent, NodeDeletedMapEvent, parse_compound_event, \
-    event_type_to_typed_event, MapEventUser, CompoundMapEvent
+    SearchQuerySavedMapEvent, SearchQuerySavedData, NodeCreatedMapEvent, NodeDeletedMapEvent, event_type_to_typed_event, \
+    MapEventUser
+from rf_event_listener.listener import parse_compound_event
 
 
 def test_simple_event():
@@ -106,13 +107,11 @@ def test_parse_compound_event():
         'additional': [
             {
                 'type': 'node_created',
-                'who': json_who,
                 'what': 'node-id-2',
                 'sessionId': 'test-session-2',
             },
             {
                 'type': 'node_deleted',
-                'who': json_who,
                 'what': 'node-id-3',
             },
         ],
@@ -128,7 +127,7 @@ def test_parse_compound_event():
         NodeCreatedMapEvent(type=EventType.node_created, what='node-id-2', who=who, session_id='test-session-2'),
         NodeDeletedMapEvent(type=EventType.node_deleted, what='node-id-3', who=who, session_id=None),
     ]
-    actual = parse_compound_event(CompoundMapEvent(**json))
+    actual = parse_compound_event('map', json, False)
     assert expected == actual
 
 
@@ -154,7 +153,7 @@ def test_parse_empty_compound_event():
             session_id='test-session',
         ),
     ]
-    actual = parse_compound_event(CompoundMapEvent(**json))
+    actual = parse_compound_event('map', json, False)
     assert expected == actual
 
 
@@ -174,4 +173,4 @@ def test_parse_unknown_event():
     }
 
     with pytest.raises(ValidationError):
-        AnyMapEvent(**json)
+        parse_compound_event('map', json, False)
