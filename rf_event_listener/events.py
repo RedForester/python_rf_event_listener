@@ -112,6 +112,7 @@ class EventType(Enum):
     branch_subscription_denied = "branch_subscription_denied"
     node_subscription_granted = "node_subscription_granted"
     node_subscription_denied = "node_subscription_denied"
+    node_mentioned = "node_mentioned"
 
 
 # noinspection PyUnusedLocal
@@ -210,6 +211,9 @@ class EventVisitor(Generic[T]):
         return self._default_result
 
     def node_subscription_denied(self, event: 'NodeSubscriptionDeniedMapEvent'):
+        return self._default_result
+
+    def node_mentioned(self, event: 'NodeMentionedMapEvent'):
         return self._default_result
 
 
@@ -390,6 +394,11 @@ class NodeSubscriptionDeniedMapEvent(TypedMapEvent):
         return visitor.node_subscription_denied(self)
 
 
+class NodeMentionedMapEvent(TypedMapEvent):
+    async def visit(self, visitor: EventVisitor[T]) -> T:
+        return visitor.node_mentioned(self)
+
+
 class CompoundMapEvent(AnyMapEvent):
     additional: Optional[List[dict]] = None
 
@@ -426,6 +435,7 @@ event_type_to_typed_event = {
     EventType.branch_subscription_denied: BranchSubscriptionDeniedMapEvent,
     EventType.node_subscription_granted: NodeSubscriptionGrantedMapEvent,
     EventType.node_subscription_denied: NodeSubscriptionDeniedMapEvent,
+    EventType.node_mentioned: NodeMentionedMapEvent,
 }
 
 
