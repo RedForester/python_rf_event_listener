@@ -4,7 +4,7 @@ with open('README.md') as f:
     long_description = f.read()
 
 setup(
-    name='rf_api_client',
+    name='rf_event_listener',
     version='0.0.1',
     description='RedForester Event Listener',
     long_description=long_description,
@@ -22,7 +22,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'pydantic ~= 1.5',
-        'rf-api-client >= 0.0',
+        'rf_api_client >= 0.0',
         'yarl ~= 1.4',
         'aiohttp ~= 3.6',
     ],
