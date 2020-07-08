@@ -57,10 +57,11 @@ class HttpEventsApi(EventsApi):
 
     async def get_map_notify(self, map_id: str, kv_prefix: str, offset: Optional[str], limit: int) -> List[KvEntry]:
         url = self._base_url / f"kv/partition/mapNotif:{map_id}:{kv_prefix}"
-        url = url.with_query({
-            'from': offset,
-            'limit': limit,
-        })
+        query = {'limit': limit}
+        if offset is not None:
+            query['from'] = offset
+        url = url.with_query(query)
+
         async with self._session.get(url) as resp:
             body = list(await resp.json())
             return [KvEntry(**e) for e in body]
