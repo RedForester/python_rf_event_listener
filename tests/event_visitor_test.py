@@ -4,7 +4,7 @@ from rf_event_listener.events import NodeUpdatedMapEvent, EventType, EventVisito
 
 
 class MockVisitor(EventVisitor[str]):
-    def node_updated(self, event: 'NodeUpdatedMapEvent') -> str:
+    async def node_updated(self, event: 'NodeUpdatedMapEvent') -> str:
         assert event.what == 'node-id'
         return 'event_accepted'
 

@@ -120,100 +120,100 @@ class EventVisitor(Generic[T]):
     def __init__(self, default_result: T):
         self._default_result = default_result
 
-    def node_updated(self, event: 'NodeUpdatedMapEvent'):
+    async def node_updated(self, event: 'NodeUpdatedMapEvent'):
         return self._default_result
 
-    def node_type_updated(self, event: 'NodeTypeUpdatedMapEvent'):
+    async def node_type_updated(self, event: 'NodeTypeUpdatedMapEvent'):
         return self._default_result
 
-    def node_created(self, event: 'NodeCreatedMapEvent'):
+    async def node_created(self, event: 'NodeCreatedMapEvent'):
         return self._default_result
 
-    def node_deleted(self, event: 'NodeDeletedMapEvent'):
+    async def node_deleted(self, event: 'NodeDeletedMapEvent'):
         return self._default_result
 
-    def node_tagged(self, event: 'NodeTaggedMapEvent'):
+    async def node_tagged(self, event: 'NodeTaggedMapEvent'):
         return self._default_result
 
-    def node_untagged(self, event: 'NodeUntaggedMapEvent'):
+    async def node_untagged(self, event: 'NodeUntaggedMapEvent'):
         return self._default_result
 
-    def node_moved(self, event: 'NodeMovedMapEvent'):
+    async def node_moved(self, event: 'NodeMovedMapEvent'):
         return self._default_result
 
-    def branch_deleted(self, event: 'BranchDeletedMapEvent'):
+    async def branch_deleted(self, event: 'BranchDeletedMapEvent'):
         return self._default_result
 
-    def branch_moved(self, event: 'BranchMovedMapEvent'):
+    async def branch_moved(self, event: 'BranchMovedMapEvent'):
         return self._default_result
 
-    def comment_pushed(self, event: 'CommentPushedMapEvent'):
+    async def comment_pushed(self, event: 'CommentPushedMapEvent'):
         return self._default_result
 
-    def comment_updated(self, event: 'CommentUpdatedMapEvent'):
+    async def comment_updated(self, event: 'CommentUpdatedMapEvent'):
         return self._default_result
 
-    def comment_deleted(self, event: 'CommentDeletedMapEvent'):
+    async def comment_deleted(self, event: 'CommentDeletedMapEvent'):
         return self._default_result
 
-    def comment_all_read(self, event: 'CommentAllReadMapEvent'):
+    async def comment_all_read(self, event: 'CommentAllReadMapEvent'):
         return self._default_result
 
-    def dialog_show(self, event: 'DialogShowMapEvent'):
+    async def dialog_show(self, event: 'DialogShowMapEvent'):
         return self._default_result
 
-    def dialog_result(self, event: 'DialogResultMapEvent'):
+    async def dialog_result(self, event: 'DialogResultMapEvent'):
         return self._default_result
 
-    def notification_show(self, event: 'NotificationShowMapEvent'):
+    async def notification_show(self, event: 'NotificationShowMapEvent'):
         return self._default_result
 
-    def url_show(self, event: 'UrlShowMapEvent'):
+    async def url_show(self, event: 'UrlShowMapEvent'):
         return self._default_result
 
-    def search_query_saved(self, event: 'SearchQuerySavedMapEvent'):
+    async def search_query_saved(self, event: 'SearchQuerySavedMapEvent'):
         return self._default_result
 
-    def search_query_deleted(self, event: 'SearchQueryDeletedMapEvent'):
+    async def search_query_deleted(self, event: 'SearchQueryDeletedMapEvent'):
         return self._default_result
 
-    def command_pushed(self, event: 'CommandPushedMapEvent'):
+    async def command_pushed(self, event: 'CommandPushedMapEvent'):
         return self._default_result
 
-    def command_deleted(self, event: 'CommandDeletedMapEvent'):
+    async def command_deleted(self, event: 'CommandDeletedMapEvent'):
         return self._default_result
 
-    def node_copied(self, event: 'NodeCopiedMapEvent'):
+    async def node_copied(self, event: 'NodeCopiedMapEvent'):
         return self._default_result
 
-    def branch_copied(self, event: 'BranchCopiedMapEvent'):
+    async def branch_copied(self, event: 'BranchCopiedMapEvent'):
         return self._default_result
 
-    def branch_access_denied(self, event: 'BranchAccessDeniedMapEvent'):
+    async def branch_access_denied(self, event: 'BranchAccessDeniedMapEvent'):
         return self._default_result
 
-    def node_access_denied(self, event: 'NodeAccessDeniedMapEvent'):
+    async def node_access_denied(self, event: 'NodeAccessDeniedMapEvent'):
         return self._default_result
 
-    def branch_access_granted(self, event: 'BranchAccessGrantedMapEvent'):
+    async def branch_access_granted(self, event: 'BranchAccessGrantedMapEvent'):
         return self._default_result
 
-    def node_access_granted(self, event: 'NodeAccessGrantedMapEvent'):
+    async def node_access_granted(self, event: 'NodeAccessGrantedMapEvent'):
         return self._default_result
 
-    def branch_subscription_granted(self, event: 'BranchSubscriptionGrantedMapEvent'):
+    async def branch_subscription_granted(self, event: 'BranchSubscriptionGrantedMapEvent'):
         return self._default_result
 
-    def branch_subscription_denied(self, event: 'BranchSubscriptionDeniedMapEvent'):
+    async def branch_subscription_denied(self, event: 'BranchSubscriptionDeniedMapEvent'):
         return self._default_result
 
-    def node_subscription_granted(self, event: 'NodeSubscriptionGrantedMapEvent'):
+    async def node_subscription_granted(self, event: 'NodeSubscriptionGrantedMapEvent'):
         return self._default_result
 
-    def node_subscription_denied(self, event: 'NodeSubscriptionDeniedMapEvent'):
+    async def node_subscription_denied(self, event: 'NodeSubscriptionDeniedMapEvent'):
         return self._default_result
 
-    def node_mentioned(self, event: 'NodeMentionedMapEvent'):
+    async def node_mentioned(self, event: 'NodeMentionedMapEvent'):
         return self._default_result
 
 
@@ -235,168 +235,168 @@ class TypedMapEvent(BaseMapEvent):
 
 class NodeUpdatedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_updated(self)
+        return await visitor.node_updated(self)
 
 
 class NodeTypeUpdatedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_type_updated(self)
+        return await visitor.node_type_updated(self)
 
 
 class NodeCreatedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_created(self)
+        return await visitor.node_created(self)
 
 
 class NodeDeletedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_deleted(self)
+        return await visitor.node_deleted(self)
 
 
 class NodeTaggedMapEvent(TypedMapEvent):
     data: NodeTaggedData
 
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_tagged(self)
+        return await visitor.node_tagged(self)
 
 
 class NodeUntaggedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_untagged(self)
+        return await visitor.node_untagged(self)
 
 
 class NodeMovedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_moved(self)
+        return await visitor.node_moved(self)
 
 
 class BranchDeletedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.branch_deleted(self)
+        return await visitor.branch_deleted(self)
 
 
 class BranchMovedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.branch_moved(self)
+        return await visitor.branch_moved(self)
 
 
 class CommentPushedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.comment_pushed(self)
+        return await visitor.comment_pushed(self)
 
 
 class CommentUpdatedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.comment_updated(self)
+        return await visitor.comment_updated(self)
 
 
 class CommentDeletedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.comment_deleted(self)
+        return await visitor.comment_deleted(self)
 
 
 class CommentAllReadMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.comment_all_read(self)
+        return await visitor.comment_all_read(self)
 
 
 class DialogShowMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.dialog_show(self)
+        return await visitor.dialog_show(self)
 
 
 class DialogResultMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.dialog_result(self)
+        return await visitor.dialog_result(self)
 
 
 class NotificationShowMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.notification_show(self)
+        return await visitor.notification_show(self)
 
 
 class UrlShowMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.url_show(self)
+        return await visitor.url_show(self)
 
 
 class SearchQuerySavedMapEvent(TypedMapEvent):
     data: SearchQuerySavedData
 
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.search_query_saved(self)
+        return await visitor.search_query_saved(self)
 
 
 class SearchQueryDeletedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.search_query_deleted(self)
+        return await visitor.search_query_deleted(self)
 
 
 class CommandPushedMapEvent(TypedMapEvent):
     data: CmdBufferPushedData
 
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.command_pushed(self)
+        return await visitor.command_pushed(self)
 
 
 class CommandDeletedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.command_deleted(self)
+        return await visitor.command_deleted(self)
 
 
 class NodeCopiedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_copied(self)
+        return await visitor.node_copied(self)
 
 
 class BranchCopiedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.branch_copied(self)
+        return await visitor.branch_copied(self)
 
 
 class BranchAccessDeniedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.branch_access_denied(self)
+        return await visitor.branch_access_denied(self)
 
 
 class NodeAccessDeniedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_access_denied(self)
+        return await visitor.node_access_denied(self)
 
 
 class BranchAccessGrantedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.branch_access_granted(self)
+        return await visitor.branch_access_granted(self)
 
 
 class NodeAccessGrantedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_access_granted(self)
+        return await visitor.node_access_granted(self)
 
 
 class BranchSubscriptionGrantedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.branch_subscription_granted(self)
+        return await visitor.branch_subscription_granted(self)
 
 
 class BranchSubscriptionDeniedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.branch_subscription_denied(self)
+        return await visitor.branch_subscription_denied(self)
 
 
 class NodeSubscriptionGrantedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_subscription_granted(self)
+        return await visitor.node_subscription_granted(self)
 
 
 class NodeSubscriptionDeniedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_subscription_denied(self)
+        return await visitor.node_subscription_denied(self)
 
 
 class NodeMentionedMapEvent(TypedMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
-        return visitor.node_mentioned(self)
+        return await visitor.node_mentioned(self)
 
 
 class CompoundMapEvent(AnyMapEvent):
