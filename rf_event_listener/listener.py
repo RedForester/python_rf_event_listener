@@ -2,7 +2,7 @@ import asyncio
 import logging
 from asyncio import Task, CancelledError, AbstractEventLoop
 from datetime import datetime
-from typing import Dict, Optional, Callable, Coroutine, Any, List
+from typing import Dict, Optional, Callable, Coroutine, Any, List, Union
 
 from pydantic import ValidationError
 
@@ -12,7 +12,23 @@ from rf_event_listener.events import TypedMapEvent, CompoundMapEvent, any_event_
 logger = logging.getLogger('rf_maps_listener')
 
 
-MapListenerCallback = Callable[[datetime, TypedMapEvent], Coroutine[Any, Any, None]]
+EventConsumerCallback = Callable[[datetime, TypedMapEvent], Coroutine[Any, Any, None]]
+
+
+class EventConsumer:
+    async def consume(self, timestamp: datetime, event: TypedMapEvent):
+        raise NotImplementedError()
+
+    async def close(self):
+        pass
+
+
+class _CallbackEventConsumer(EventConsumer):
+    def __init__(self, callback: EventConsumerCallback):
+        self._callback = callback
+
+    async def consume(self, timestamp: datetime, event: TypedMapEvent):
+        await self._callback(timestamp, event)
 
 
 class MapsListener:
@@ -29,11 +45,25 @@ class MapsListener:
         self._loop = loop or asyncio.get_event_loop()
         self._skip_unknown_events = skip_unknown_events
 
-    def add_map(self, map_id: str, kv_prefix: str, listener: MapListenerCallback, initial_offset: Optional[str] = None):
+    def add_map(
+            self,
+            map_id: str,
+            kv_prefix: str,
+            consumer: Union[EventConsumerCallback, EventConsumer],
+            initial_offset: Optional[str] = None
+    ):
+        consumer_obj = consumer if isinstance(consumer, EventConsumer) else _CallbackEventConsumer(consumer)
+
         if map_id in self._listeners:
             return
         listener = MapListener(
-            self._api, listener, self._events_per_request, map_id, kv_prefix, initial_offset, self._skip_unknown_events
+            self._api,
+            consumer_obj,
+            self._events_per_request,
+            map_id,
+            kv_prefix,
+            initial_offset,
+            self._skip_unknown_events,
         )
         task = self._loop.create_task(listener.listen())
         self._listeners[map_id] = task
@@ -50,7 +80,7 @@ class MapListener:
     def __init__(
             self,
             api: EventsApi,
-            listener: MapListenerCallback,
+            consumer: EventConsumer,
             events_per_request: int,
             map_id: str,
             kv_prefix: str,
@@ -58,7 +88,7 @@ class MapListener:
             skip_unknown_events: bool,
     ):
         self._api = api
-        self._listener = listener
+        self._consumer = consumer
         self._events_per_request = events_per_request
         self._map_id = map_id
         self._kv_prefix = kv_prefix
@@ -72,6 +102,7 @@ class MapListener:
             try:
                 await self._events_loop()
             except CancelledError:
+                await self._consumer.close()
                 break
             except Exception:
                 # todo exp. timeout
@@ -94,7 +125,7 @@ class MapListener:
             if len(events) != 0:
                 logger.info(f"[{self._map_id}] Read {len(events)} events")
             for event in events:
-                await process_event(self._map_id, self._listener, event, self._skip_unknown_events)
+                await process_event(self._map_id, self._consumer.consume, event, self._skip_unknown_events)
                 self._offset = event.key[-1]
                 logger.info(f"[{self._map_id}] New KV offset = {self._offset}")
             if len(events) < self._events_per_request:
@@ -110,7 +141,7 @@ class MapListener:
 
 async def process_event(
         map_id: str,
-        listener: MapListenerCallback,
+        listener: EventConsumerCallback,
         event: KvEntry,
         skip_unknown_events: bool,
 ):

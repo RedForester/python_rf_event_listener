@@ -1,3 +1,4 @@
+import asyncio
 from asyncio import Future, wait_for
 from datetime import datetime
 from typing import Optional, List, Tuple
@@ -7,7 +8,7 @@ import pytest
 from rf_event_listener.api import EventsApi, KvNotifyLast, KvEntry
 from rf_event_listener.events import TypedMapEvent, CompoundMapEvent, EventType, MapEventUser, NodeUpdatedMapEvent, \
     NodeDeletedMapEvent, any_event_to_typed
-from rf_event_listener.listener import MapsListener, process_event
+from rf_event_listener.listener import MapsListener, process_event, EventConsumer
 
 
 class MockEventsApi(EventsApi):
@@ -254,6 +255,32 @@ async def test_skip_unknown_event_inside_compound():
     ]
 
     assert expected_events == processed_events
+
+
+@pytest.mark.asyncio
+async def test_close_event_consumer():
+    completed: Future[None] = Future()
+
+    class CloseableConsumer(EventConsumer):
+        async def consume(self, timestamp: datetime, event: TypedMapEvent):
+            pass
+
+        async def close(self):
+            await asyncio.sleep(0.001)
+            completed.set_result(None)
+
+    api = MockEventsApi(
+        events=[],
+        map_id='map-id',
+        kv_prefix='map-prefix',
+    )
+    listener = MapsListener(api)
+    listener.add_map('map-id', 'map-prefix', CloseableConsumer())
+
+    await asyncio.sleep(0.001)
+
+    listener.remove_map('map-id')
+    await wait_for(completed, 10)
 
 
 # todo tests
