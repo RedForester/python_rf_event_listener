@@ -55,8 +55,9 @@ class MockEventsApi(EventsApi):
 async def test_initially_empty_event_queue():
     completed: Future[Tuple[datetime, TypedMapEvent]] = Future()
 
-    async def consumer(timestamp: datetime, actual_event: TypedMapEvent):
-        completed.set_result((timestamp, actual_event))
+    class Consumer(EventConsumer):
+        async def consume(self, timestamp: datetime, actual_event: TypedMapEvent):
+            completed.set_result((timestamp, actual_event))
 
     api = MockEventsApi(
         events=[],
@@ -64,7 +65,7 @@ async def test_initially_empty_event_queue():
         kv_prefix='map-prefix',
     )
     listener = MapsListener(api)
-    listener.add_map('map-id', 'map-prefix', consumer, None)
+    listener.add_map('map-id', 'map-prefix', Consumer(), None)
 
     await api.wait_for_drain()
 
@@ -90,8 +91,9 @@ async def test_initially_empty_event_queue():
 async def test_filled_event_queue():
     completed: Future[Tuple[datetime, TypedMapEvent]] = Future()
 
-    async def consumer(timestamp: datetime, actual_event: TypedMapEvent):
-        completed.set_result((timestamp, actual_event))
+    class Consumer(EventConsumer):
+        async def consume(self, timestamp: datetime, actual_event: TypedMapEvent):
+            completed.set_result((timestamp, actual_event))
 
     old_event = CompoundMapEvent(
         type=EventType.node_updated,
@@ -113,7 +115,7 @@ async def test_filled_event_queue():
         kv_prefix='map-prefix',
     )
     listener = MapsListener(api)
-    listener.add_map('map-id', 'map-prefix', consumer, None)
+    listener.add_map('map-id', 'map-prefix', Consumer(), None)
 
     await api.wait_for_drain()
 
@@ -139,8 +141,9 @@ async def test_filled_event_queue():
 async def test_filled_event_queue_with_offset():
     completed: Future[Tuple[datetime, TypedMapEvent]] = Future()
 
-    async def consumer(timestamp: datetime, actual_event: TypedMapEvent):
-        completed.set_result((timestamp, actual_event))
+    class Consumer(EventConsumer):
+        async def consume(self, timestamp: datetime, actual_event: TypedMapEvent):
+            completed.set_result((timestamp, actual_event))
 
     old_event = CompoundMapEvent(
         type=EventType.node_updated,
@@ -162,7 +165,7 @@ async def test_filled_event_queue_with_offset():
         kv_prefix='map-prefix',
     )
     listener = MapsListener(api)
-    listener.add_map('map-id', 'map-prefix', consumer, '1')
+    listener.add_map('map-id', 'map-prefix', Consumer(), '1')
 
     api.push_event(
         KvEntry(key=['2'], value=old_event)

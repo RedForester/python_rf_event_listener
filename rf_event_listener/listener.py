@@ -2,7 +2,7 @@ import asyncio
 import logging
 from asyncio import Task, CancelledError, AbstractEventLoop
 from datetime import datetime
-from typing import Dict, Optional, Callable, Coroutine, Any, List, Union
+from typing import Dict, Optional, Callable, Coroutine, Any, List
 
 from pydantic import ValidationError
 
@@ -23,14 +23,6 @@ class EventConsumer:
         pass
 
 
-class _CallbackEventConsumer(EventConsumer):
-    def __init__(self, callback: EventConsumerCallback):
-        self._callback = callback
-
-    async def consume(self, timestamp: datetime, event: TypedMapEvent):
-        await self._callback(timestamp, event)
-
-
 class MapsListener:
     def __init__(
             self,
@@ -49,16 +41,14 @@ class MapsListener:
             self,
             map_id: str,
             kv_prefix: str,
-            consumer: Union[EventConsumerCallback, EventConsumer],
+            consumer: EventConsumer,
             initial_offset: Optional[str] = None
     ):
-        consumer_obj = consumer if isinstance(consumer, EventConsumer) else _CallbackEventConsumer(consumer)
-
         if map_id in self._listeners:
             return
         listener = MapListener(
             self._api,
-            consumer_obj,
+            consumer,
             self._events_per_request,
             map_id,
             kv_prefix,
