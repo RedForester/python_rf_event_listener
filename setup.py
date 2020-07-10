@@ -14,7 +14,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
     ],
-    url='https://github.com/RedForester/rf_event_listener',
+    url='https://github.com/RedForester/python_rf_event_listener',
     author='Red Forester',
     author_email='tech@redforester.com',
     license='MIT',
