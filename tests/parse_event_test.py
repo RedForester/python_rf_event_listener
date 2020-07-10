@@ -2,8 +2,8 @@ import pytest
 from pydantic import ValidationError
 
 from rf_event_listener.events import AnyMapEvent, EventType, NodeUpdatedMapEvent, any_event_to_typed, \
-    SearchQuerySavedMapEvent, SearchQuerySavedData, NodeCreatedMapEvent, NodeDeletedMapEvent, event_type_to_typed_event, \
-    MapEventUser
+    SearchQuerySavedMapEvent, SearchQuerySavedData, NodeCreatedMapEvent, NodeDeletedMapEvent, MapEventUser, \
+    event_type_to_typed_event
 from rf_event_listener.listener import parse_compound_event
 
 

@@ -291,4 +291,3 @@ async def test_close_event_consumer():
 #  timeout in wait_for_notify_last,
 #  remove_map
 #  read more events than limit
-
