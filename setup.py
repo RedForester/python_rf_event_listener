@@ -5,7 +5,7 @@ with open('README.md') as f:
 
 setup(
     name='rf_event_listener',
-    version='0.0.2',
+    version='0.0.3',
     description='RedForester Event Listener',
     long_description=long_description,
     long_description_content_type='text/markdown',
