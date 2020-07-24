@@ -19,6 +19,9 @@ class EventConsumer:
     async def consume(self, timestamp: datetime, event: TypedMapEvent):
         raise NotImplementedError()
 
+    async def commit(self, offset: str):
+        pass
+
     async def close(self):
         pass
 
@@ -115,8 +118,10 @@ class MapListener:
             if len(events) != 0:
                 logger.info(f"[{self._map_id}] Read {len(events)} events")
             for event in events:
+                offset = event.key[-1]
                 await process_event(self._map_id, self._consumer.consume, event, self._skip_unknown_events)
-                self._offset = event.key[-1]
+                await self._consumer.commit(offset)
+                self._offset = offset
                 logger.info(f"[{self._map_id}] New KV offset = {self._offset}")
             if len(events) < self._events_per_request:
                 new_notify_last = await self._api.wait_for_map_notify_last(
@@ -131,14 +136,15 @@ class MapListener:
 
 async def process_event(
         map_id: str,
-        listener: EventConsumerCallback,
+        consume: EventConsumerCallback,
         event: KvEntry,
         skip_unknown_events: bool,
 ):
     logger.debug(f"[{map_id}] Processing event {event}")
 
     try:
-        timestamp = datetime.utcfromtimestamp(int(event.key[-1]) / 1000)
+        offset = event.key[-1]
+        timestamp = datetime.utcfromtimestamp(int(offset) / 1000)
         events = parse_compound_event(map_id, event.value, skip_unknown_events)
     except (ValidationError, ValueError, IndexError):
         if skip_unknown_events:
@@ -148,7 +154,7 @@ async def process_event(
 
     try:
         for event in events:
-            await listener(timestamp, event)
+            await consume(timestamp, event)
     except CancelledError:
         raise
     except Exception:

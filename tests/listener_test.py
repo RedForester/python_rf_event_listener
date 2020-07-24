@@ -192,7 +192,7 @@ async def test_skip_unknown_event():
 
     await process_event(
         map_id='map',
-        listener=consumer,
+        consume=consumer,
         event=event,
         skip_unknown_events=True
     )
@@ -246,7 +246,7 @@ async def test_skip_unknown_event_inside_compound():
 
     await process_event(
         map_id='map',
-        listener=consumer,
+        consume=consumer,
         event=event,
         skip_unknown_events=True
     )
