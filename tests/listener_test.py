@@ -1,9 +1,8 @@
 import asyncio
+import pytest
 from asyncio import Future, wait_for
 from datetime import datetime
 from typing import Optional, List, Tuple
-
-import pytest
 
 from rf_event_listener.api import EventsApi, KvNotifyLast, KvEntry
 from rf_event_listener.events import TypedMapEvent, CompoundMapEvent, EventType, MapEventUser, NodeUpdatedMapEvent, \
@@ -284,6 +283,12 @@ async def test_close_event_consumer():
 
     listener.remove_map('map-id')
     await wait_for(completed, 10)
+
+
+def test_timeout_error():
+    # tests that asyncio.TimeoutError exists
+    with pytest.raises(asyncio.TimeoutError):
+        raise asyncio.TimeoutError()
 
 
 # todo tests
