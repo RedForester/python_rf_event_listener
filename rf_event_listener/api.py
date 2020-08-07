@@ -1,8 +1,7 @@
-import asyncio
-from typing import Optional, List
-
 import aiohttp
+import asyncio
 from aiohttp import ClientSession
+from typing import Optional, List
 from yarl import URL
 
 from rf_event_listener.events import BaseEventModel
@@ -76,7 +75,7 @@ class HttpEventsApi(EventsApi):
             async with self._session.get(url) as resp:
                 body = await resp.json()
                 return KvNotifyLast(**body)
-        except asyncio.exceptions.TimeoutError:
+        except asyncio.TimeoutError:
             return None
         except aiohttp.ClientResponseError as e:
             if e.status == 408:
