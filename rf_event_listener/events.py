@@ -224,7 +224,7 @@ class AnyMapEvent(BaseMapEvent):
     data: Optional[Any] = None
 
 
-class TypedMapEvent(BaseMapEvent):
+class TypedMapEvent(AnyMapEvent):
     async def visit(self, visitor: EventVisitor[T]) -> T:
         raise NotImplementedError()
 

@@ -174,3 +174,22 @@ def test_parse_unknown_event():
 
     with pytest.raises(ValidationError):
         parse_compound_event('map', json, False)
+
+
+def test_event_has_data_field():
+    json = {
+        'type': 'node_updated',
+        'what': 'node-id',
+        'who': {
+            'id': 'user-id',
+            'username': 'username',
+        },
+        'sessionId': 'test-session',
+        'data': {
+            'foo': 'bar'
+        }
+    }
+
+    events = parse_compound_event('map', json, False)
+
+    assert events[0].data['foo'] == 'bar'
