@@ -7,6 +7,9 @@ from yarl import URL
 from rf_event_listener.events import BaseEventModel
 
 
+DEFAULT_RF_URL = URL('https://app.redforester.com')
+
+
 class KvNotifyLast(BaseEventModel):
     value: Optional[str]
     version: str
@@ -29,7 +32,7 @@ class EventsApi:
 
 
 class HttpEventsApi(EventsApi):
-    def __init__(self, base_url: URL, read_timeout: float = 60):
+    def __init__(self, base_url: URL = DEFAULT_RF_URL, read_timeout: float = 60):
         self._base_url = base_url
         self._read_timeout = read_timeout
         self._session = ClientSession(
